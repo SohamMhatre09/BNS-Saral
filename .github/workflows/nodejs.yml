@@ -1,0 +1,53 @@
+name: Node.js CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Check out code
+      uses: actions/checkout@v2
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v2
+      with:
+        node-version: '14' # Specify your Node.js version
+
+    - name: Install dependencies
+      run: npm install > install.log 2>&1
+
+    - name: Run tests
+      run: npm test > test.log 2>&1
+
+    - name: Start application and log output
+      run: |
+        npm start > app.log 2>&1 || (cat app.log && exit 1)
+
+    - name: Upload build logs
+      if: failure()
+      uses: actions/upload-artifact@v2
+      with:
+        name: build-logs
+        path: install.log
+
+    - name: Upload test logs
+      if: failure()
+      uses: actions/upload-artifact@v2
+      with:
+        name: test-logs
+        path: test.log
+
+    - name: Upload application logs
+      if: failure()
+      uses: actions/upload-artifact@v2
+      with:
+        name: application-logs
+        path: app.log
